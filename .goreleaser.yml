@@ -5,6 +5,10 @@ builds:
     binary: sr
     env:
       - CGO_ENABLED=1
+      - >-
+        {{- if eq .Os "linux" }}
+          {{- if eq .Arch "arm64" }}CC=aarch64-linux-gnu-gcc{{- end }}
+        {{- end }}
     goos:
       - linux
       - darwin
@@ -12,11 +16,14 @@ builds:
     goarch:
       - amd64
       - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
     ldflags:
       - -s -w
-      - -X main.version={{.Version}}
-      - -X main.buildTime={{.Date}}
-      - -X main.gitCommit={{.Commit}}
+      - -X main.Version={{.Version}}
+      - -X main.GitCommit={{.Commit}}
+      - -X main.BuildTime={{.Date}}
 
 archives:
   - formats: [ 'binary' ]
