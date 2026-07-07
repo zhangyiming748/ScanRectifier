@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"ScanRectifier/code"
+
 	"github.com/spf13/cobra"
 )
 
@@ -19,7 +21,7 @@ var deskewCmd = &cobra.Command{
 	Long:  `将扫描后稍微倾斜的图片修复为横平竖直的正向图片。`,
 	Run: func(cmd *cobra.Command, args []string) {
 		dir, _ := cmd.Flags().GetString("dir")
-		// TODO: 核心代码待实现
+		code.Deskew(dir)
 		fmt.Printf("Deskew: 处理目录 [%s] 下的图片...\n", dir)
 	},
 }
@@ -30,7 +32,7 @@ var maskingCmd = &cobra.Command{
 	Long:  `去除扫描图片边缘的黑线，使图片边缘更加干净。`,
 	Run: func(cmd *cobra.Command, args []string) {
 		dir, _ := cmd.Flags().GetString("dir")
-		// TODO: 核心代码待实现
+		code.Masking(dir)
 		fmt.Printf("Masking: 处理目录 [%s] 下的图片...\n", dir)
 	},
 }
