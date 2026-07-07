@@ -8,6 +8,8 @@ builds:
       - >-
         {{- if eq .Os "linux" }}
           {{- if eq .Arch "arm64" }}CC=aarch64-linux-gnu-gcc{{- end }}
+        {{- else if eq .Os "darwin" }}
+          {{- if eq .Arch "arm64" }}CC=oa64-clang CXX=oa64-clang++{{- end }}
         {{- end }}
     goos:
       - linux
@@ -18,6 +20,8 @@ builds:
       - arm64
     ignore:
       - goos: windows
+        goarch: arm64
+      - goos: darwin
         goarch: arm64
     ldflags:
       - -s -w
