@@ -8,12 +8,9 @@ builds:
       - >-
         {{- if eq .Os "linux" }}
           {{- if eq .Arch "arm64" }}CC=aarch64-linux-gnu-gcc{{- end }}
-        {{- else if eq .Os "darwin" }}
-          {{- if eq .Arch "arm64" }}CC=oa64-clang CXX=oa64-clang++{{- end }}
         {{- end }}
     goos:
       - linux
-      - darwin
       - windows
     goarch:
       - amd64
@@ -21,8 +18,22 @@ builds:
     ignore:
       - goos: windows
         goarch: arm64
-      - goos: darwin
-        goarch: arm64
+    ldflags:
+      - -s -w
+      - -X main.Version={{.Version}}
+      - -X main.GitCommit={{.Commit}}
+      - -X main.BuildTime={{.Date}}
+
+  - id: macos-build
+    main: .
+    binary: sr
+    env:
+      - CGO_ENABLED=1
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
     ldflags:
       - -s -w
       - -X main.Version={{.Version}}
