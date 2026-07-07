@@ -7,7 +7,6 @@ import (
 
 func Deskew(dir string) {
 	deskew.ProcessDirectory(dir)
-
 }
 
 func Masking(dir string) {
