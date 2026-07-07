@@ -32,7 +32,7 @@ var maskingCmd = &cobra.Command{
 	Long:  `去除扫描图片边缘的黑线，使图片边缘更加干净。`,
 	Run: func(cmd *cobra.Command, args []string) {
 		dir, _ := cmd.Flags().GetString("dir")
-		code.Masking(dir)
+		code.Masking(dir )
 		fmt.Printf("Masking: 处理目录 [%s] 下的图片...\n", dir)
 	},
 }
