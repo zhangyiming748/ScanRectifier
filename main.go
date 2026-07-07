@@ -3,16 +3,25 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime"
 
 	"ScanRectifier/code"
 
 	"github.com/spf13/cobra"
 )
 
+// 版本信息（通过 -ldflags 在编译时注入）
+var (
+	Version   = "dev"
+	GitCommit = "unknown"
+	BuildTime = "unknown"
+)
+
 var rootCmd = &cobra.Command{
-	Use:   "scanfix",
-	Short: "扫描图片修复工具",
-	Long:  `ScanRectifier 是一个用于修复扫描图片的命令行工具，支持矫正倾斜和去除边缘黑线。`,
+	Use:     "scanfix",
+	Short:   "扫描图片修复工具",
+	Long:    `ScanRectifier 是一个用于修复扫描图片的命令行工具，支持矫正倾斜和去除边缘黑线。`,
+	Version: Version,
 }
 
 var deskewCmd = &cobra.Command{
@@ -42,7 +51,18 @@ func init() {
 
 	maskingCmd.Flags().StringP("dir", "d", "./", "图片所在的根目录（必填）")
 
-	rootCmd.AddCommand(deskewCmd, maskingCmd)
+	rootCmd.AddCommand(deskewCmd, maskingCmd, versionCmd)
+}
+
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "显示版本信息",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("ScanRectifier %s\n", Version)
+		fmt.Printf("Git Commit: %s\n", GitCommit)
+		fmt.Printf("Build Time: %s\n", BuildTime)
+		fmt.Printf("Go Version: %s %s/%s\n", runtime.Version(), runtime.GOOS, runtime.GOARCH)
+	},
 }
 
 func main() {
