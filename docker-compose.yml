@@ -8,5 +8,5 @@ services:
     working_dir: /app
     volumes:
       - .:/app
-    command: go run main.go --help
+    command: tail -f /dev/null
     restart: unless-stopped
