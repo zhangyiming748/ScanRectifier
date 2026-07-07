@@ -1,0 +1,12 @@
+# 为了尽可能保证外部依赖一致，所有服务使用相同的docker容器环境，避免兼容性问题
+version: '3.8'
+
+services:
+  scanrectifier:
+    image: golang:1.26.4-trixie
+    container_name: scanrectifier
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: go run main.go --help
+    restart: unless-stopped
