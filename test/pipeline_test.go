@@ -23,10 +23,7 @@ func TestProcessDirectory(t *testing.T) {
 	t.Log("=== 第一步：纠偏处理 ===")
 	deskew.ProcessDirectory(testDir)
 
-	
-
 	t.Logf("✅ 纠偏完成")
-
 
 	// 第二步：边缘漂白
 	t.Log("=== 第二步：边缘漂白处理 ===")
