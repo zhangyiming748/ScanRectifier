@@ -8,6 +8,8 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    container:
+      image: gocv/opencv:4.11.0
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -17,16 +19,10 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: 'stable'
-      - name: Install dependencies
+      - name: Install cross-compilers
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libopencv-dev \
-            build-essential \
-            cmake \
-            pkg-config \
-            gcc g++ make \
-            gcc-aarch64-linux-gnu g++-aarch64-linux-gnu clang
+          apt-get update
+          apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
           echo "CGO_ENABLED=1" >> $GITHUB_ENV
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v7
