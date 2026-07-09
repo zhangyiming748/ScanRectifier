@@ -17,10 +17,17 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: 'stable'
-      - name: Install cross-compilers
+      - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu clang libopencv-dev build-essential cmake pkg-config gcc g++ make cmake pkg-config build-essential libopencv-dev
+          sudo apt-get install -y \
+            libopencv-dev \
+            build-essential \
+            cmake \
+            pkg-config \
+            gcc g++ make \
+            gcc-aarch64-linux-gnu g++-aarch64-linux-gnu clang
+          echo "CGO_ENABLED=1" >> $GITHUB_ENV
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v7
         with:
