@@ -17,8 +17,9 @@ import (
 // 返回: 倾斜角度(度), 错误信息
 // 处理成功后会用纠偏结果覆盖原文件
 func DeskewImage(srcPath string) (float64, error) {
-	// 生成临时文件名
-	tmpPath := srcPath + ".tmp"
+	// 生成临时文件名（在扩展名前添加"_临时"标记）
+	ext := filepath.Ext(srcPath)
+	tmpPath := srcPath[:len(srcPath)-len(ext)] + "_临时" + ext
 
 	// 读取图片
 	src := gocv.IMRead(srcPath, gocv.IMReadColor)
