@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"math"
+	"os"
 	"path/filepath"
 
 	"github.com/zhangyiming748/finder"
@@ -12,9 +13,13 @@ import (
 )
 
 // DeskewImage 对单张图片进行纠偏处理
-// 输入: srcPath - 源图片路径, dstPath - 输出图片路径
+// 输入: srcPath - 源图片路径
 // 返回: 倾斜角度(度), 错误信息
-func DeskewImage(srcPath, dstPath string) (float64, error) {
+// 处理成功后会用纠偏结果覆盖原文件
+func DeskewImage(srcPath string) (float64, error) {
+	// 生成临时文件名
+	tmpPath := srcPath + ".tmp"
+
 	// 读取图片
 	src := gocv.IMRead(srcPath, gocv.IMReadColor)
 	if src.Empty() {
@@ -55,21 +60,28 @@ func DeskewImage(srcPath, dstPath string) (float64, error) {
 
 	fmt.Printf("检测到倾斜角度: %.2f°\n", angle)
 
-	// 如果倾斜角度很小，直接保存原图
+	// 如果倾斜角度很小，直接保存原图到临时文件
 	if math.Abs(angle) < 0.5 {
-		if !gocv.IMWrite(dstPath, src) {
-			return angle, fmt.Errorf("无法保存图片: %s", dstPath)
+		if !gocv.IMWrite(tmpPath, src) {
+			return angle, fmt.Errorf("无法保存图片: %s", tmpPath)
 		}
-		return angle, nil
+	} else {
+		// 旋转图片
+		rotated := rotateImage(src, angle)
+		defer rotated.Close()
+
+		// 保存结果到临时文件
+		if !gocv.IMWrite(tmpPath, rotated) {
+			return angle, fmt.Errorf("无法保存纠偏后的图片: %s", tmpPath)
+		}
 	}
 
-	// 旋转图片
-	rotated := rotateImage(src, angle)
-	defer rotated.Close()
-
-	// 保存结果
-	if !gocv.IMWrite(dstPath, rotated) {
-		return angle, fmt.Errorf("无法保存纠偏后的图片: %s", dstPath)
+	// 处理成功：删除原文件，将临时文件重命名为原文件名
+	if err := os.Remove(srcPath); err != nil {
+		return angle, fmt.Errorf("无法删除原文件: %s, %v", srcPath, err)
+	}
+	if err := os.Rename(tmpPath, srcPath); err != nil {
+		return angle, fmt.Errorf("无法重命名临时文件: %s -> %s, %v", tmpPath, srcPath, err)
 	}
 
 	return angle, nil
@@ -182,18 +194,11 @@ func rotateImage(src gocv.Mat, angle float64) gocv.Mat {
 
 // ProcessDirectory 处理目录下的所有图片
 // dir: 图片所在目录
-// 在原目录下生成文件名后缀带有"正"字的横屏竖直图片
+// 纠偏成功后直接覆盖原文件
 func ProcessDirectory(dir string) {
 	images := finder.FindAllImages(dir)
 	for _, img := range images {
-		// 获取文件名和扩展名
-		ext := filepath.Ext(img)
-		nameWithoutExt := img[:len(img)-len(ext)]
-
-		// 生成输出文件名：原文件名_正.扩展名
-		dst := nameWithoutExt + "_正" + ext
-
-		fmt.Printf("处理: %s -> %s\n", filepath.Base(img), filepath.Base(dst))
-		DeskewImage(img, dst)
+		fmt.Printf("处理: %s\n", filepath.Base(img))
+		DeskewImage(img)
 	}
 }

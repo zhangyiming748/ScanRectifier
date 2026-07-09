@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"os"
 	"path/filepath"
 
 	"github.com/zhangyiming748/finder"
@@ -11,9 +12,12 @@ import (
 )
 
 // MaskImage 对单张图片进行边缘掩膜漂白处理
-// 输入: srcPath - 源图片路径, dstPath - 输出图片路径, dpi - 扫描DPI
+// 输入: srcPath - 源图片路径, dpi - 扫描DPI
 // 返回: 错误信息
-func MaskImage(srcPath, dstPath string, dpi int) error {
+// 处理成功后会用漂白结果覆盖原文件
+func MaskImage(srcPath string, dpi int) error {
+	// 生成临时文件名
+	tmpPath := srcPath + ".tmp"
 	// 读取图片
 	src := gocv.IMRead(srcPath, gocv.IMReadColor)
 	if src.Empty() {
@@ -21,11 +25,11 @@ func MaskImage(srcPath, dstPath string, dpi int) error {
 	}
 	defer src.Close()
 
-	// 计算边缘漂白范围（1mm对应的像素值）
-	// 公式: marginPx = 1 * DPI / 25.4
-	marginPx := int(float64(dpi) * 1.0 / 25.4)
+	// 计算边缘漂白范围（3mm对应的像素值）
+	// 公式: marginPx = 3 * DPI / 25.4
+	marginPx := int(float64(dpi) * 3.0 / 25.4)
 
-	fmt.Printf("DPI: %d, 边缘漂白范围: %d 像素 (约1mm)\n", dpi, marginPx)
+	fmt.Printf("DPI: %d, 边缘漂白范围: %d 像素 (约3mm)\n", dpi, marginPx)
 
 	height := src.Rows()
 	width := src.Cols()
@@ -69,9 +73,17 @@ func MaskImage(srcPath, dstPath string, dpi int) error {
 		whiteColor,
 		-1)
 
-	// 保存结果
-	if !gocv.IMWrite(dstPath, result) {
-		return fmt.Errorf("无法保存处理后的图片: %s", dstPath)
+	// 保存结果到临时文件
+	if !gocv.IMWrite(tmpPath, result) {
+		return fmt.Errorf("无法保存处理后的图片: %s", tmpPath)
+	}
+
+	// 处理成功：删除原文件，将临时文件重命名为原文件名
+	if err := os.Remove(srcPath); err != nil {
+		return fmt.Errorf("无法删除原文件: %s, %v", srcPath, err)
+	}
+	if err := os.Rename(tmpPath, srcPath); err != nil {
+		return fmt.Errorf("无法重命名临时文件: %s -> %s, %v", tmpPath, srcPath, err)
 	}
 
 	fmt.Printf("✅ 边缘漂白完成\n")
@@ -81,7 +93,7 @@ func MaskImage(srcPath, dstPath string, dpi int) error {
 // ProcessDirectory 处理目录下的所有图片
 // dir: 图片所在目录
 // dpi: 扫描DPI（用于计算边缘漂白范围）
-// 在原目录下生成文件名后缀带有"净"字的漂白后图片
+// 漂白成功后直接覆盖原文件
 func ProcessDirectory(dir string) {
 
 	dpi := 300 // 默认300 DPI
@@ -93,22 +105,15 @@ func ProcessDirectory(dir string) {
 	}
 
 	fmt.Printf("📁 找到 %d 个图片文件\n", len(images))
-	fmt.Printf("📊 DPI设置: %d (边缘漂白范围: %d 像素，约1mm)\n\n", dpi, int(float64(dpi)*1.0/25.4))
+	fmt.Printf("📊 DPI设置: %d (边缘漂白范围: %d 像素，约3mm)\n\n", dpi, int(float64(dpi)*3.0/25.4))
 
 	successCount := 0
 	failCount := 0
 
 	for _, img := range images {
-		// 获取文件名和扩展名
-		ext := filepath.Ext(img)
-		nameWithoutExt := img[:len(img)-len(ext)]
+		fmt.Printf("处理: %s\n", filepath.Base(img))
 
-		// 生成输出文件名：原文件名_净.扩展名
-		dst := nameWithoutExt + "_净" + ext
-
-		fmt.Printf("处理: %s -> %s\n", filepath.Base(img), filepath.Base(dst))
-
-		err := MaskImage(img, dst, dpi)
+		err := MaskImage(img, dpi)
 		if err != nil {
 			fmt.Printf("  ✗ 失败: %v\n", err)
 			failCount++
