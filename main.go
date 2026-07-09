@@ -46,12 +46,25 @@ var maskingCmd = &cobra.Command{
 	},
 }
 
+var processCmd = &cobra.Command{
+	Use:   "process",
+	Short: "完整处理流程（纠偏 + 边缘漂白）",
+	Long:  `依次执行图片纠偏和边缘漂白处理，处理完成后直接覆盖原文件。`,
+	Run: func(cmd *cobra.Command, args []string) {
+		dir, _ := cmd.Flags().GetString("dir")
+		fmt.Printf("Process: 开始处理目录 [%s] 下的图片...\n\n", dir)
+		code.ProcessAll(dir)
+	},
+}
+
 func init() {
 	deskewCmd.Flags().StringP("dir", "d", "./", "图片所在的根目录（必填）")
 
 	maskingCmd.Flags().StringP("dir", "d", "./", "图片所在的根目录（必填）")
 
-	rootCmd.AddCommand(deskewCmd, maskingCmd, versionCmd)
+	processCmd.Flags().StringP("dir", "d", "./", "图片所在的根目录（必填）")
+
+	rootCmd.AddCommand(deskewCmd, maskingCmd, processCmd, versionCmd)
 }
 
 var versionCmd = &cobra.Command{
